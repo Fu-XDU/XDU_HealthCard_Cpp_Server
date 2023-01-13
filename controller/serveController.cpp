@@ -8,6 +8,30 @@
 #include "../utils/utils.h"
 #include "../service/serveService.h"
 
+int serveController::GetSummary(HttpRequest *req, HttpResponse *resp) {
+    Response response = Response::NewResponse();
+    Utils::setBaseResponse(resp, &response);
+    return HTTP_STATUS_OK;
+}
+
+int serveController::StorageHealthCard(HttpRequest *req, HttpResponse *resp) {
+    Response response = Response::NewResponse();
+    Utils::setBaseResponse(resp, &response);
+    return HTTP_STATUS_OK;
+}
+
+int serveController::DeleteThreeCheck(HttpRequest *req, HttpResponse *resp) {
+    Response response = Response::NewResponse();
+    Utils::setBaseResponse(resp, &response);
+    return HTTP_STATUS_OK;
+}
+
+int serveController::DeleteHealthCard(HttpRequest *req, HttpResponse *resp) {
+    Response response = Response::NewResponse();
+    Utils::setBaseResponse(resp, &response);
+    return HTTP_STATUS_OK;
+}
+
 int serveController::StorageThreeCheck(HttpRequest *req, HttpResponse *resp) {
     Response response = Response::NewResponse();
     ThreeCheck threeCheck;

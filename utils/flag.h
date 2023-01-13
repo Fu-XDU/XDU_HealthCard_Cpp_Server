@@ -8,6 +8,7 @@
 #include <iostream>
 
 extern int port;
+extern std::string listenHost;
 extern std::string mysqlHost;
 extern std::string mysqlUser;
 extern std::string mysqlPasswd;

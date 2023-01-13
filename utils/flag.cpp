@@ -6,6 +6,7 @@
 #include "co/flag.h"
 
 DEF_int32(port, 8080, "Server port");
+DEF_string(listenHost, "0.0.0.0", "Listen host");
 DEF_string(mysqlHost, "127.0.0.1", "Mysql host");
 DEF_string(mysqlUser, "root", "Mysql user");
 DEF_string(mysqlPasswd, "123456", "Mysql password");
@@ -20,6 +21,7 @@ DEF_string(hmacSecret, "", "Hmac secret, a random string");
 DEF_string(mapApiKey, "", "Map api key");
 
 int port;
+std::string listenHost;
 std::string mysqlHost;
 std::string mysqlUser;
 std::string mysqlPasswd;
@@ -33,8 +35,9 @@ std::string secret;
 std::string hmacSecret;
 std::string mapApiKey;
 
-void init_env(){
+void init_env() {
     port = FLG_port;
+    listenHost = FLG_listenHost.c_str();
     mysqlHost = FLG_mysqlHost.c_str();
     mysqlUser = FLG_mysqlUser.c_str();
     mysqlPasswd = FLG_mysqlPasswd.c_str();

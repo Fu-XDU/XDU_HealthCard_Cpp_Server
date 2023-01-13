@@ -11,6 +11,10 @@
 class Utils {
 public:
     static void setBaseResponse(HttpResponse *resp, Response *response);
+
+    static void printRoutes(http_api_handlers *http_api_handlers);
+
+    static std::string widthBlank(int width);
 };
 
 #endif //XDU_HEALTHCARD_SERVER_UTILS_H

@@ -10,6 +10,14 @@
 class serveController {
 public:
     static int StorageThreeCheck(HttpRequest *req, HttpResponse *resp);
+
+    static int StorageHealthCard(HttpRequest *req, HttpResponse *resp);
+
+    static int DeleteThreeCheck(HttpRequest *req, HttpResponse *resp);
+
+    static int DeleteHealthCard(HttpRequest *req, HttpResponse *resp);
+
+    static int GetSummary(HttpRequest *req, HttpResponse *resp);
 };
 
 

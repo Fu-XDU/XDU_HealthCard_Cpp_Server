@@ -4,9 +4,7 @@
 
 #include "mysql.h"
 
-//ConnPool *connPool = ConnPool::GetInstance();
 ConnPool *connPool = nullptr;
-
 
 int Mysql::StorageThreeCheck(ThreeCheck *threeCheck) {
     sql::Connection *conn = connPool->GetConnection();

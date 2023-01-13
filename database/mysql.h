@@ -11,7 +11,7 @@
 #include "connection_pool.h"
 #include "../model/threeCheck.h"
 
-#define LOG(s) std::cout<<__FILE__<<" : "<<__LINE__<<" "<<__TIMESTAMP__<<" : "<<s<<std::endl;
+//#define LOG(s) std::cout<<__FILE__<<" : "<<__LINE__<<" "<<__TIMESTAMP__<<" : "<<s<<std::endl;
 
 extern ConnPool *connPool;
 

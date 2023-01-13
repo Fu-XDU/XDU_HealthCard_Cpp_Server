@@ -1,10 +1,13 @@
 #include "HttpServer.h"
 #include "routes/router.h"
-#include "co/co.h"
+#include "co/log.h"
 #include "utils/flag.h"
 #include "database/mysql.h"
+#include "./utils/utils.h"
 
 void Run();
+
+void startInfo(hv::HttpServer *server);
 
 void prepare(int argc, char **argv) {
     FLG_cout = true;
@@ -24,8 +27,14 @@ void Run() {
     Router::Register(router);
     hv::HttpServer server;
     server.registerHttpService(&router);
-    server.setPort(8080);
+    server.setHost(listenHost.c_str());
+    server.setPort(port);
     server.setThreadNum(4);
+    startInfo(&server);
     server.run();
 }
 
+void startInfo(hv::HttpServer *server) {
+    Utils::printRoutes(&server->service->api_handlers);
+    LOG << "Server listening on " << server->host << ":" << server->port;
+}
