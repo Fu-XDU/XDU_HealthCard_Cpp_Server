@@ -9,13 +9,24 @@
 
 extern int port;
 extern std::string listenHost;
+
 extern std::string mysqlHost;
 extern std::string mysqlUser;
 extern std::string mysqlPasswd;
 extern std::string mysqlDB;
+
+extern std::string redisHost;
+extern std::string redisUser;
+extern std::string redisPasswd;
+
 extern int mysqlPort;
 extern int mysqlMaxThread;
 extern int mysqlIdleThread;
+
+extern int redisPort;
+extern int redisDB;
+extern int redisMaxThread;
+extern int redisIdleThread;
 
 extern std::string appID;
 extern std::string secret;

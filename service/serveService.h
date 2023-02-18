@@ -7,11 +7,18 @@
 
 
 #include "../model/threeCheck.h"
+#include "../model/healthCard.h"
 #include "../model/base/retCodeDef.h"
 
 class serveService {
 public:
     static RET_CODE StorageThreeCheck(ThreeCheck *threeCheck);
+
+    static RET_CODE StorageHealthCard(HealthCard *healthCard);
+
+    static RET_CODE DeleteThreeCheck(const std::string &openid);
+
+    static RET_CODE DeleteHealthCard(const std::string &openid);
 };
 
 

@@ -2,23 +2,21 @@
 // Created by 付铭 on 2022/10/8.
 //
 
-#include <stdexcept>
-#include <exception>
-#include <utility>
-#include "connection_pool.h"
+#include "mysql_conn_pool.h"
 #include "co/log.h"
-#include "../utils/flag.h"
+#include "../../utils/flag.h"
+#include "co/defer.h"
 
 using namespace std;
 
-ConnPool *ConnPool::connPool = nullptr;
+MysqlConnPool *MysqlConnPool::connPool = nullptr;
 
 // 获取连接池对象，单例模式
-ConnPool *ConnPool::GetInstance() {
+MysqlConnPool *MysqlConnPool::GetInstance() {
     if (connPool == nullptr) {
         string url = "tcp://" + mysqlHost + ":" + std::to_string(mysqlPort);
-        connPool = new ConnPool(url, mysqlUser, mysqlPasswd, mysqlMaxThread,
-                                mysqlIdleThread);
+        connPool = new MysqlConnPool(url, mysqlUser, mysqlPasswd, mysqlDB, mysqlMaxThread,
+                                     mysqlIdleThread);
 
         LOG << "Connect to mysql success. Url:" + url;
     }
@@ -27,7 +25,7 @@ ConnPool *ConnPool::GetInstance() {
 }
 
 // 数据库连接池的构造函数
-ConnPool::ConnPool(string url, string userName, string password, int poolSize, int minIdleConns) {
+MysqlConnPool::MysqlConnPool(string url, string userName, string password, string database, int poolSize, int minIdleConns) {
     if (poolSize <= 1) {
         poolSize = 1;
     }
@@ -40,23 +38,47 @@ ConnPool::ConnPool(string url, string userName, string password, int poolSize, i
     this->username = std::move(userName);
     this->password = std::move(password);
     this->url = std::move(url);
+    this->database = std::move(database);
 
     try {
         this->driver = sql::mysql::get_driver_instance();
     }
     catch (sql::SQLException &e) {
-        ELOG << "get driver error.";
+        ELOG << "get driver error." << e.what();
     }
     catch (std::runtime_error &e) {
-        ELOG << "[ConnPool] run time error.";
+        ELOG << "[MysqlConnPool] run time error." << e.what();
     }
 
     // 在初始化连接池时，建立一定数量的数据库连接
     this->InitConnection(minIdleConns);
+
+    this->InitTable("");
 }
 
-// 初始化数据库连接池，创建最大连接数一半的连接数量
-void ConnPool::InitConnection(int initialSize) {
+void MysqlConnPool::InitTable(std::string sql) {
+    sql = R"(CREATE TABLE IF NOT EXISTS `health_cards` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `openid` varchar(40) DEFAULT NULL,
+  `stu_id` varchar(20) DEFAULT NULL,
+  `passwd` longtext,
+  `location` varchar(1023) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_health_cards_openid` (`openid`),
+  UNIQUE KEY `idx_health_cards_stu_id` (`stu_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;)";
+
+    sql::Connection *conn = this->GetConnection();
+    defer(this->ReleaseConnection(conn));
+
+    sql::PreparedStatement *pstmt = conn->prepareStatement(sql);
+    defer(delete pstmt);
+    pstmt->executeUpdate();
+
+}
+
+// 初始化数据库连接池
+void MysqlConnPool::InitConnection(int initialSize) {
     sql::Connection *conn;
     pthread_mutex_lock(&lock);
 
@@ -66,35 +88,40 @@ void ConnPool::InitConnection(int initialSize) {
             connList.push_back(conn);
             ++(this->curSize);
         } else {
-            ELOG << "Init connection error.";
+            if (i == 0) {
+                break;
+            }
         }
     }
 
-    FLOG_IF(this->curSize == 0) << "Connect to mysql failed. Url:" + this->url;
+    FLOG_IF(this->curSize == 0) << "Connect to mysql failed. Url:" << this->url << " Database:" << this->database;
 
     pthread_mutex_unlock(&lock);
 }
 
 // 创建并返回一个连接
-sql::Connection *ConnPool::CreateConnection() {
+sql::Connection *MysqlConnPool::CreateConnection() {
     sql::Connection *conn;
     try {
         // 建立连接
         conn = driver->connect(this->url, this->username, this->password);
+        if (conn) {
+            conn->setSchema(database);
+        }
         return conn;
     }
     catch (sql::SQLException &e) {
-        ELOG << "create connection error.";
+        ELOG << "create connection error." << e.what();
         return nullptr;
     }
     catch (std::runtime_error &e) {
-        ELOG << "[CreateConnection] run time error.";
+        ELOG << "[CreateConnection] run time error." << e.what();
         return nullptr;
     }
 }
 
 // 从连接池中获得一个连接
-sql::Connection *ConnPool::GetConnection() {
+sql::Connection *MysqlConnPool::GetConnection() {
     sql::Connection *con;
     pthread_mutex_lock(&lock);
 
@@ -143,10 +170,10 @@ sql::Connection *ConnPool::GetConnection() {
 }
 
 // 释放数据库连接，将该连接放回到连接池中
-void ConnPool::ReleaseConnection(sql::Connection *conn) {
+void MysqlConnPool::ReleaseConnection(sql::Connection *conn) {
     if (conn) {
         pthread_mutex_lock(&lock);
-        std::cout << curSize << " " << minIdleConns << std::endl;
+//        std::cout << curSize << " " << minIdleConns << std::endl;
         if (curSize <= minIdleConns) {
             connList.push_back(conn);
         } else {
@@ -158,18 +185,18 @@ void ConnPool::ReleaseConnection(sql::Connection *conn) {
 }
 
 // 数据库连接池的析构函数
-ConnPool::~ConnPool() {
+MysqlConnPool::~MysqlConnPool() {
     this->DestoryConnPool();
 }
 
 // 销毁连接池，需要先销毁连接池的中连接
-void ConnPool::DestoryConnPool() {
+void MysqlConnPool::DestoryConnPool() {
     list<sql::Connection *>::iterator itCon;
     pthread_mutex_lock(&lock);
 
     for (itCon = connList.begin(); itCon != connList.end(); ++itCon) {
         // 销毁连接池中的连接
-        ConnPool::DestoryConnection(*itCon);
+        MysqlConnPool::DestoryConnection(*itCon);
     }
     curSize = 0;
     // 清空连接池中的连接
@@ -179,11 +206,10 @@ void ConnPool::DestoryConnPool() {
 }
 
 // 销毁数据库连接
-void ConnPool::DestoryConnection(sql::Connection *conn) {
+void MysqlConnPool::DestoryConnection(sql::Connection *conn) {
     if (conn) {
         try {
             conn->close();
-            LOG << "关闭conn";
         }
         catch (sql::SQLException &e) {
             perror(e.what());

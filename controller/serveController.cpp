@@ -15,25 +15,46 @@ int serveController::GetSummary(HttpRequest *req, HttpResponse *resp) {
 }
 
 int serveController::StorageHealthCard(HttpRequest *req, HttpResponse *resp) {
-    Response response = Response::NewResponse();
+    Response response;
+    HealthCard healthCard;
+    req->GetJson();
+    try {
+        healthCard.stuID = req->json["stu_id"];
+        healthCard.passwd = req->json["passwd"];
+        healthCard.openid = req->json["openid"];
+        healthCard.location = req->json["location"];
+    } catch (...) {
+        response = Response::NewResponse(BindDataFailed);
+        Utils::setBaseResponse(resp, &response);
+        return HTTP_STATUS_OK;
+    }
+
+    RET_CODE retCode = serveService::StorageHealthCard(&healthCard);
+    response = Response::NewResponse(retCode);
     Utils::setBaseResponse(resp, &response);
     return HTTP_STATUS_OK;
 }
 
 int serveController::DeleteThreeCheck(HttpRequest *req, HttpResponse *resp) {
-    Response response = Response::NewResponse();
+    Response response;
+    std::string openid = req->GetParam("openid");
+    RET_CODE retCode = serveService::DeleteThreeCheck(openid);
+    response = Response::NewResponse(retCode);
     Utils::setBaseResponse(resp, &response);
     return HTTP_STATUS_OK;
 }
 
 int serveController::DeleteHealthCard(HttpRequest *req, HttpResponse *resp) {
-    Response response = Response::NewResponse();
+    Response response;
+    std::string openid = req->GetParam("openid");
+    RET_CODE retCode = serveService::DeleteHealthCard(openid);
+    response = Response::NewResponse(retCode);
     Utils::setBaseResponse(resp, &response);
     return HTTP_STATUS_OK;
 }
 
 int serveController::StorageThreeCheck(HttpRequest *req, HttpResponse *resp) {
-    Response response = Response::NewResponse();
+    Response response;
     ThreeCheck threeCheck;
     req->GetJson();
     try {

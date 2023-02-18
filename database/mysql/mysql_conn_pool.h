@@ -2,8 +2,8 @@
 // Created by 付铭 on 2022/10/8.
 //
 
-#ifndef XDU_HEALTHCARD_SERVER_CONNECTION_POOL_H
-#define XDU_HEALTHCARD_SERVER_CONNECTION_POOL_H
+#ifndef XDU_HEALTHCARD_SERVER_MYSQL_CONN_POOL_H
+#define XDU_HEALTHCARD_SERVER_MYSQL_CONN_POOL_H
 
 
 #include <jdbc/mysql_connection.h>
@@ -20,9 +20,9 @@
 
 //using namespace std;
 
-class ConnPool {
+class MysqlConnPool {
 public:
-    ~ConnPool();
+    ~MysqlConnPool();
 
     // 获取数据库连接
     sql::Connection *GetConnection();
@@ -31,7 +31,7 @@ public:
     void ReleaseConnection(sql::Connection *conn);
 
     // 获取数据库连接池对象
-    static ConnPool *GetInstance();
+    static MysqlConnPool *GetInstance();
 
 private:
     // 当前已建立的数据库连接数量
@@ -43,11 +43,12 @@ private:
     std::string username;
     std::string password;
     std::string url;
+    std::string database;
     // 连接池容器
     std::list<sql::Connection *> connList;
     // 线程锁
     pthread_mutex_t lock{};
-    static ConnPool *connPool;
+    static MysqlConnPool *connPool;
     sql::Driver *driver;
 
     // 创建一个连接
@@ -63,8 +64,10 @@ private:
     void DestoryConnPool();
 
     // 构造方法
-    ConnPool(std::string url, std::string user, std::string password, int poolSize, int minIdleConns);
+    MysqlConnPool(std::string url, std::string user, std::string password, std::string database, int poolSize, int minIdleConns);
+
+    void InitTable(std::string sql);
 };
 
 
-#endif //XDU_HEALTHCARD_SERVER_CONNECTION_POOL_H
+#endif //XDU_HEALTHCARD_SERVER_MYSQL_CONN_POOL_H

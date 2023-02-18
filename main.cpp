@@ -2,7 +2,8 @@
 #include "routes/router.h"
 #include "co/log.h"
 #include "utils/flag.h"
-#include "database/mysql.h"
+#include "database/mysql/mysql.h"
+#include "database/redis/redis.h"
 #include "./utils/utils.h"
 
 void Run();
@@ -17,7 +18,8 @@ void prepare(int argc, char **argv) {
 
 int main(int argc, char **argv) {
     prepare(argc, argv);
-    connPool = ConnPool::GetInstance();
+    mysqlConnPool = MysqlConnPool::GetInstance();
+    redisConnPool = RedisConnPool::GetInstance();
     Run();
     return 0;
 }
