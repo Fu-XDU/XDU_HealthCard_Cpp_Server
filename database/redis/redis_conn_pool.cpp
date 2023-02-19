@@ -19,7 +19,7 @@ RedisConnPool *RedisConnPool::GetInstance() {
 
         LOG << "Connect to redis success. IP:" << redisHost << " Port:" << redisPort;
     }
-
+    connPool->GetConnection();
     return connPool;
 }
 

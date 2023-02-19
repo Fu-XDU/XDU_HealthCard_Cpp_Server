@@ -15,7 +15,7 @@ static RET_CODE SUCCESS{0, "Success"};
 static RET_CODE BindDataFailed{10001, "Bind data failed"};
 static RET_CODE ConnectMysqlFailed{20001, "Connect mysql failed"};
 
-
+static RET_CODE LockExist{30010, "Redis lock has existed"};
 static RET_CODE CannotSubmitAgain{30011, "Cannot submit again"};
 static RET_CODE RedisCurdFailed{30012, "Redis curd failed"};
 static RET_CODE MysqlCurdFailed{30013, "Mysql curd failed"};

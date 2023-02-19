@@ -10,7 +10,14 @@
 extern RedisConnPool *redisConnPool;
 
 class Redis {
+public:
+    static bool Lock(const std::string &key);
 
+    static bool Del(const std::string &key);
+
+    static bool Set(const std::string &key, const std::string &value, int expiration);
+
+    static bool Unlock(const std::string &key);
 };
 
 
