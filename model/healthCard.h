@@ -6,6 +6,7 @@
 #define XDU_HEALTHCARD_SERVER_HEALTHCARD_H
 
 #include "iostream"
+#include <json.hpp>
 
 struct HealthCard {
     int id;
@@ -16,6 +17,17 @@ struct HealthCard {
 
     [[nodiscard]] std::string toString() const {
         return "stuID:" + this->stuID;
+    }
+
+    nlohmann::json toJson() {
+        nlohmann::json json = {
+                {"id",       this->id},
+                {"openid",   this->openid},
+                {"stu_id",   this->stuID},
+                {"passwd",   this->passwd},
+                {"location", this->location},
+        };
+        return json;
     }
 };
 

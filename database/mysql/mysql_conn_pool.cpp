@@ -124,7 +124,7 @@ sql::Connection *MysqlConnPool::CreateConnection() {
 sql::Connection *MysqlConnPool::GetConnection() {
     sql::Connection *con;
     pthread_mutex_lock(&lock);
-
+    defer(pthread_mutex_unlock(&lock));
     // 连接池容器中还有连接
     if (!connList.empty()) {
         // 获取第一个连接
@@ -143,7 +143,6 @@ sql::Connection *MysqlConnPool::GetConnection() {
             }
         }
 
-        pthread_mutex_unlock(&lock);
         return con;
     }
         // 连接池容器中没有连接
@@ -153,17 +152,14 @@ sql::Connection *MysqlConnPool::GetConnection() {
             con = this->CreateConnection();
             if (con) {
                 ++curSize;
-                pthread_mutex_unlock(&lock);
                 return con;
             } else {
-                pthread_mutex_unlock(&lock);
                 return nullptr;
             }
         }
             // 当前建立的连接数已经达到最大连接数
         else {
             perror("[GetConnection] connections reach the max number.");
-            pthread_mutex_unlock(&lock);
             return nullptr;
         }
     }
@@ -173,14 +169,13 @@ sql::Connection *MysqlConnPool::GetConnection() {
 void MysqlConnPool::ReleaseConnection(sql::Connection *conn) {
     if (conn) {
         pthread_mutex_lock(&lock);
-//        std::cout << curSize << " " << minIdleConns << std::endl;
+        defer(pthread_mutex_unlock(&lock));
         if (curSize <= minIdleConns) {
             connList.push_back(conn);
         } else {
             DestoryConnection(conn);
             curSize--;
         }
-        pthread_mutex_unlock(&lock);
     }
 }
 
@@ -193,6 +188,7 @@ MysqlConnPool::~MysqlConnPool() {
 void MysqlConnPool::DestoryConnPool() {
     list<sql::Connection *>::iterator itCon;
     pthread_mutex_lock(&lock);
+    defer(pthread_mutex_unlock(&lock));
 
     for (itCon = connList.begin(); itCon != connList.end(); ++itCon) {
         // 销毁连接池中的连接
@@ -201,8 +197,6 @@ void MysqlConnPool::DestoryConnPool() {
     curSize = 0;
     // 清空连接池中的连接
     connList.clear();
-
-    pthread_mutex_unlock(&lock);
 }
 
 // 销毁数据库连接

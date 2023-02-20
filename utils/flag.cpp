@@ -4,8 +4,10 @@
 
 #include <iostream>
 #include "co/flag.h"
+#include "co/log.h"
 
 DEF_int32(port, 8080, "Server port");
+DEF_int32(threadNum, 10, "Server thread number");
 DEF_string(listenHost, "0.0.0.0", "Listen host");
 DEF_string(mysqlHost, "127.0.0.1", "Mysql host");
 DEF_string(mysqlUser, "root", "Mysql user");
@@ -31,6 +33,7 @@ DEF_string(hmacSecret, "", "Hmac secret, a random string");
 DEF_string(mapApiKey, "", "Map api key");
 
 int port;
+int threadNum;
 std::string listenHost;
 
 std::string mysqlHost;
@@ -57,7 +60,17 @@ std::string hmacSecret;
 std::string mapApiKey;
 
 void init_env() {
+    FLOG_IF(FLG_port < 0) << "wrong port: " << FLG_port;
+
     port = FLG_port;
+
+    if (FLG_threadNum < 1) {
+        WLOG << "threadNum cannot be set to " << FLG_threadNum << ", it is automatically set to 10";
+        threadNum = 10;
+    } else {
+        threadNum = FLG_threadNum;
+    }
+
     listenHost = FLG_listenHost.c_str();
 
     mysqlHost = FLG_mysqlHost.c_str();
@@ -69,13 +82,25 @@ void init_env() {
     redisUser = FLG_redisUser.c_str();
     redisPasswd = FLG_redisPasswd.c_str();
 
+    FLOG_IF(FLG_mysqlPort < 0) << "wrong mysql port: " << FLG_mysqlPort;
     mysqlPort = FLG_mysqlPort;
     mysqlMaxThread = FLG_mysqlMaxThread;
+    if (FLG_mysqlMaxThread < FLG_mysqlIdleThread) {
+        WLOG << "mysql idle thread: " << FLG_mysqlIdleThread << "can not be more than mysql max thread: "
+             << FLG_mysqlMaxThread << ".It is automatically set to mysql max thread: " << FLG_mysqlMaxThread;
+        FLG_mysqlIdleThread = mysqlMaxThread;
+    }
     mysqlIdleThread = FLG_mysqlIdleThread;
 
+    FLOG_IF(FLG_redisPort < 0) << "wrong redis port: " << FLG_redisPort;
     redisPort = FLG_redisPort;
     redisDB = FLG_redisDB;
     redisMaxThread = FLG_redisMaxThread;
+    if (FLG_redisMaxThread < FLG_redisIdleThread) {
+        WLOG << "redis idle thread: " << FLG_redisIdleThread << "can not be more than redis max thread: "
+             << FLG_redisMaxThread << ".It is automatically set to redis max thread: " << FLG_redisMaxThread;
+        FLG_redisIdleThread = FLG_redisMaxThread;
+    }
     redisIdleThread = FLG_redisIdleThread;
 
     appID = FLG_appID.c_str();

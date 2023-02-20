@@ -24,6 +24,7 @@ make
 ```bash
 ./XDU_HealthCard_Server
 -port=1423
+-threadNum=10
 -mysqlHost=127.0.0.1
 -mysqlPort=3306
 -mysqlUser=root

@@ -9,7 +9,10 @@
 #include "../service/serveService.h"
 
 int serveController::GetSummary(HttpRequest *req, HttpResponse *resp) {
-    Response response = Response::NewResponse();
+    Response response;
+    std::string openid = req->GetParam("openid");
+    Summary summary = serveService::GetSummary(openid);
+    response = Response::NewResponse(summary.toJson());
     Utils::setBaseResponse(resp, &response);
     return HTTP_STATUS_OK;
 }

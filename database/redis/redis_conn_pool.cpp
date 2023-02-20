@@ -6,6 +6,7 @@
 #include "../../utils/flag.h"
 #include "co/log.h"
 #include "co/defer.h"
+#include "co/defer.h"
 
 using namespace std;
 
@@ -48,7 +49,7 @@ RedisConnPool::RedisConnPool(string ip, int port, string userName, string passwo
 void RedisConnPool::InitConnection(int initialSize) {
     redisContext *conn;
     pthread_mutex_lock(&lock);
-
+    defer(pthread_mutex_unlock(&lock));
     for (int i = 0; i < initialSize; i++) {
         conn = this->CreateConnection();
         if (conn) {
@@ -62,8 +63,6 @@ void RedisConnPool::InitConnection(int initialSize) {
     }
 
     FLOG_IF(this->curSize == 0) << "Connect to redis failed. IP:" << this->ip << " Port:" << this->port;
-
-    pthread_mutex_unlock(&lock);
 }
 
 // 创建并返回一个连接
@@ -94,6 +93,7 @@ redisContext *RedisConnPool::CreateConnection() {
 redisContext *RedisConnPool::GetConnection() {
     redisContext *con;
     pthread_mutex_lock(&lock);
+    defer(pthread_mutex_unlock(&lock));
 
     // 连接池容器中还有连接
     if (!connList.empty()) {
@@ -117,24 +117,21 @@ redisContext *RedisConnPool::GetConnection() {
         pthread_mutex_unlock(&lock);
         return con;
     }
-        // 连接池容器中没有连接
+    // 连接池容器中没有连接
     else {
         // 当前已创建的连接数小于最大连接数，则创建新的连接
         if (curSize < poolSize) {
             con = this->CreateConnection();
             if (con) {
                 ++curSize;
-                pthread_mutex_unlock(&lock);
                 return con;
             } else {
-                pthread_mutex_unlock(&lock);
                 return nullptr;
             }
         }
-            // 当前建立的连接数已经达到最大连接数
+        // 当前建立的连接数已经达到最大连接数
         else {
             perror("[GetConnection] connections reach the max number.");
-            pthread_mutex_unlock(&lock);
             return nullptr;
         }
     }
@@ -144,13 +141,13 @@ redisContext *RedisConnPool::GetConnection() {
 void RedisConnPool::ReleaseConnection(redisContext *conn) {
     if (conn) {
         pthread_mutex_lock(&lock);
+        defer(pthread_mutex_unlock(&lock));
         if (curSize <= minIdleConns) {
             connList.push_back(conn);
         } else {
             DestoryConnection(conn);
             curSize--;
         }
-        pthread_mutex_unlock(&lock);
     }
 }
 
@@ -163,7 +160,7 @@ RedisConnPool::~RedisConnPool() {
 void RedisConnPool::DestoryConnPool() {
     list<redisContext *>::iterator itCon;
     pthread_mutex_lock(&lock);
-
+    defer(pthread_mutex_unlock(&lock));
     for (itCon = connList.begin(); itCon != connList.end(); ++itCon) {
         // 销毁连接池中的连接
         RedisConnPool::DestoryConnection(*itCon);
@@ -171,8 +168,6 @@ void RedisConnPool::DestoryConnPool() {
     curSize = 0;
     // 清空连接池中的连接
     connList.clear();
-
-    pthread_mutex_unlock(&lock);
 }
 
 // 销毁数据库连接

@@ -31,7 +31,10 @@ void Run() {
     server.registerHttpService(&router);
     server.setHost(listenHost.c_str());
     server.setPort(port);
-    server.setThreadNum(4);
+    // 服务端同时进行处理的线程数量
+    // 超过这个数量的线程会被挂起，直到有线程空闲来处理它
+    // 挂起的线程不会被服务端超时，可能会由客户端进行超时从而断开连接
+    server.setThreadNum(threadNum);
     startInfo(&server);
     server.run();
 }

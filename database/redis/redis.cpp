@@ -20,6 +20,7 @@ bool Redis::Del(const std::string &key) {
         return false;
     }
     redisContext *conn = redisConnPool->GetConnection();
+    defer(redisConnPool->ReleaseConnection(conn));
     auto *reply = (redisReply *) redisCommand(conn, "DEL %s", key.c_str());
     defer(freeReplyObject(reply));
     return reply->integer == 1;
@@ -31,13 +32,14 @@ bool Redis::Set(const std::string &key, const std::string &value, const int expi
     }
 
     redisContext *conn = redisConnPool->GetConnection();
-    std::string cmd;
+    defer(redisConnPool->ReleaseConnection(conn));
+    char * cmd = (char *) std::calloc(40, sizeof(char));
     if (expiration == 0) {
-        std::sprintf(&cmd[0], "SET %s %s NX", key.c_str(), value.c_str());
+        std::sprintf(cmd, "SET %s %s NX", key.c_str(), value.c_str());
     } else {
-        std::sprintf(&cmd[0], "SET %s %s EX %d NX", key.c_str(), value.c_str(), expiration);
+        std::sprintf(cmd, "SET %s %s EX %d NX", key.c_str(), value.c_str(), expiration);
     }
-    auto *reply = (redisReply *) redisCommand(conn, cmd.c_str());
+    auto *reply = (redisReply *) redisCommand(conn, cmd);
     defer(freeReplyObject(reply));
     return strcmp(reply->str, "OK") == 0;
 }

@@ -6,6 +6,13 @@
 #include "../database/mysql/mysql.h"
 #include "../database/redis/redis.h"
 
+Summary serveService::GetSummary(const std::string &openid) {
+    Summary summary;
+    summary.threeCheck = Mysql::GetNeededThreeCheckByOpenid(openid);
+    summary.healthCard = Mysql::GetNeededHealthCardByOpenid(openid);
+    return summary;
+}
+
 RET_CODE serveService::StorageThreeCheck(ThreeCheck *threeCheck) {
     // 在redis加锁，保证多线程安全
     std::string lockKey = "StorageThreeCheck_" + threeCheck->openid;

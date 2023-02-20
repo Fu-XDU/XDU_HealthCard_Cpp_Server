@@ -6,6 +6,7 @@
 #define XDU_HEALTHCARD_SERVER_THREECHECK_H
 
 #include "iostream"
+#include <json.hpp>
 
 struct ThreeCheck {
     int id;
@@ -16,6 +17,17 @@ struct ThreeCheck {
 
     [[nodiscard]] std::string toString() const {
         return "stuID:" + this->stuID;
+    }
+
+    nlohmann::json toJson() {
+        nlohmann::json json = {
+                {"id",       this->id},
+                {"openid",  this->openid},
+                {"stu_id",   this->stuID},
+                {"passwd",   this->passwd},
+                {"location", this->location},
+        };
+        return json;
     }
 };
 

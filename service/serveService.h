@@ -9,6 +9,7 @@
 #include "../model/threeCheck.h"
 #include "../model/healthCard.h"
 #include "../model/base/retCodeDef.h"
+#include "../model/summary.h"
 
 class serveService {
 public:
@@ -19,6 +20,8 @@ public:
     static RET_CODE DeleteThreeCheck(const std::string &openid);
 
     static RET_CODE DeleteHealthCard(const std::string &openid);
+
+    static Summary GetSummary(const std::string &openid);
 };
 
 

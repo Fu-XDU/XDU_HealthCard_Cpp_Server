@@ -153,10 +153,58 @@ bool Mysql::DeleteThreeCheck(const std::string &openid) {
     return updateCount > 0;
 }
 
+ThreeCheck Mysql::GetNeededThreeCheckByOpenid(const std::string &openid) {
+    bool registered = Mysql::ThreeCheckRegisteredByOpenid(openid);
+    ThreeCheck threeCheck = {.id = 0};
+    if (!registered) {
+        return threeCheck;
+    }
 
+    sql::Connection *conn = mysqlConnPool->GetConnection();
+    defer(mysqlConnPool->ReleaseConnection(conn));
 
-//    sql::ResultSet *res = pstmt->executeQuery();
-//    res->afterLast();
-//    while (res->previous())
-//        std::cout << "\t... MySQL counts: " << res->getInt("id") << endl;
-//    delete res;
+    sql::PreparedStatement *pstmt = conn->prepareStatement(
+            "SELECT id,openid,stu_id,location FROM `three_checks` WHERE openid = ?");
+    defer(delete pstmt);
+    pstmt->setString(1, openid);
+
+    sql::ResultSet *res = pstmt->executeQuery();
+    defer(delete res);
+    res->afterLast();
+    if (res->previous())
+        threeCheck = {
+                .id = res->getInt("id"),
+                .openid = res->getString("openid"),
+                .stuID = res->getString("stu_id"),
+                .location = res->getString("location"),
+        };
+    return threeCheck;
+}
+
+HealthCard Mysql::GetNeededHealthCardByOpenid(const std::string &openid) {
+    bool registered = Mysql::HealthCardRegisteredByOpenid(openid);
+    HealthCard healthCard = {.id = 0};
+    if (!registered) {
+        return healthCard;
+    }
+
+    sql::Connection *conn = mysqlConnPool->GetConnection();
+    defer(mysqlConnPool->ReleaseConnection(conn));
+
+    sql::PreparedStatement *pstmt = conn->prepareStatement(
+            "SELECT id,openid,stu_id,location FROM `health_cards` WHERE openid = ?");
+    defer(delete pstmt);
+    pstmt->setString(1, openid);
+
+    sql::ResultSet *res = pstmt->executeQuery();
+    defer(delete res);
+    res->afterLast();
+    if (res->previous())
+        healthCard = {
+                .id = res->getInt("id"),
+                .openid = res->getString("openid"),
+                .stuID = res->getString("stu_id"),
+                .location = res->getString("location"),
+        };
+    return healthCard;
+}

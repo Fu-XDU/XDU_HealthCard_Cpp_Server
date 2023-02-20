@@ -8,6 +8,7 @@
 #include <iostream>
 
 extern int port;
+extern int threadNum;
 extern std::string listenHost;
 
 extern std::string mysqlHost;

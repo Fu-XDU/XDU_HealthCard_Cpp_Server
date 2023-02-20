@@ -37,6 +37,10 @@ public:
     static bool DeleteHealthCard(const std::string &openid);
 
     static bool DeleteThreeCheck(const std::string &openid);
+
+    static ThreeCheck GetNeededThreeCheckByOpenid(const std::string &openid);
+
+    static HealthCard GetNeededHealthCardByOpenid(const std::string &openid);
 };
 
 #endif //XDU_HEALTHCARD_SERVER_MYSQL_H
