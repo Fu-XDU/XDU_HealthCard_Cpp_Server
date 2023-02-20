@@ -29,11 +29,14 @@ make
 -mysqlUser=root
 -mysqlPasswd=123456
 -mysqlDB=xdu_health_card
+-redisHost=127.0.0.1
+-redisPort=6379
+-redisPasswd=123456
+-redisDB=0
+-redisMaxThread=20
+-redisIdleThread=10
 -appID=wxe885e9927d9317a7
 -secret=4025e476d05c62cbbae0cb2e04ef6d58
 -mapApiKey=XHOBZ-CKERS-TNL3D-6265B-VC5AH-D7BGV
 -hmacSecret=randomString
 ```
-
-
-
